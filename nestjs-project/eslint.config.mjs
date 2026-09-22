@@ -32,4 +32,12 @@ export default tseslint.config(
       "prettier/prettier": ["error", { endOfLine: "auto" }],
     },
   },
+  {
+    // Jest mock assertions (e.g. `expect(mockedService.method).toHaveBeenCalledWith(...)`)
+    // are a safe, standard pattern that this rule cannot distinguish from real unbound-method bugs.
+    files: ['**/*.spec.ts', '**/*.integration-spec.ts', '**/*.e2e-spec.ts'],
+    rules: {
+      '@typescript-eslint/unbound-method': 'off',
+    },
+  },
 );

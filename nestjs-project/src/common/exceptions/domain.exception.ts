@@ -48,3 +48,33 @@ export class TokenReuseDetectedException extends DomainException {
     );
   }
 }
+
+export class VideoNotFoundException extends DomainException {
+  constructor() {
+    super('VIDEO_NOT_FOUND', 404, 'Video not found');
+  }
+}
+
+export class ChannelNotFoundException extends DomainException {
+  constructor() {
+    super('CHANNEL_NOT_FOUND', 404, 'Channel not found');
+  }
+}
+
+export class ForbiddenResourceException extends DomainException {
+  constructor() {
+    super('FORBIDDEN_RESOURCE', 403, 'You do not own this resource');
+  }
+}
+
+export class InvalidUploadStateException extends DomainException {
+  constructor(message = 'Video is not in a valid state for upload completion') {
+    super('INVALID_UPLOAD_STATE', 400, message);
+  }
+}
+
+export class VideoNotReadyException extends DomainException {
+  constructor(message = 'Video is still processing or has failed') {
+    super('VIDEO_NOT_READY', 400, message);
+  }
+}
