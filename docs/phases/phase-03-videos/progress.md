@@ -1,7 +1,7 @@
 # phase-03-videos — Progress
 
 **Status:** in_progress  
-**SIs:** 5/8 completed
+**SIs:** 6/8 completed
 
 ### SI-03.1 — Dependencies, Configuration Namespaces & Docker Compose
 - **Status:** completed
@@ -29,6 +29,11 @@
 - **Observations:** Implemented VideosModule, VideosController, VideosService, InitUploadDto, CompleteUploadDto, and video-slug.util.ts. Added domain exceptions VideoNotFoundException, ChannelNotFoundException, ForbiddenResourceException, InvalidUploadStateException, and VideoNotReadyException. Handled multipart upload branching for files > 100MB (up to 10GB limit) generating presigned part URLs. Verified video draft persistence in PostgreSQL, status transition to PROCESSING upon completion, and BullMQ job enqueuing.
 
 ### SI-03.6 — Standalone Video Worker & FFmpeg Metadata/Thumbnail Extraction
+- **Status:** completed
+- **Tests:** 4 unit tests passing in video-processor.worker.spec.ts (job dispatch, metadata extraction, thumbnail upload, status transition to READY, error handling with FAILED status); full test suite 168/168 unit/integration passing (30 suites), 52/52 e2e passing, tsc code 0, lint 0 errors.
+- **Observations:** Implemented VideoProcessorWorker extending WorkerHost with fluent-ffmpeg for duration probe and frame screenshot. Created WorkerModule and standalone worker entrypoint src/worker.ts. Added video-worker service to compose.yaml running npm run start:worker:dev in an isolated container.
+
+### SI-03.7 — Video Streaming (Range 206) & File Download
 - **Status:** pending
 - **Tests:** pending
 - **Observations:** none

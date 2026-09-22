@@ -17,6 +17,21 @@ services:
       minio:
         condition: service_started
 
+  video-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    volumes:
+      - .:/home/node/app
+    command: npm run start:worker:dev
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_started
+
   db:
     image: postgres:17
     ports:
