@@ -1,7 +1,7 @@
 # phase-03-videos — Progress
 
 **Status:** in_progress  
-**SIs:** 2/8 completed
+**SIs:** 3/8 completed
 
 ### SI-03.1 — Dependencies, Configuration Namespaces & Docker Compose
 - **Status:** completed
@@ -14,9 +14,9 @@
 - **Observations:** Created VideoStatus enum (DRAFT, UPLOADING, PROCESSING, READY, FAILED) and Video entity with channel FK (cascade delete), unique slug index, status index, and storage key. Generated TypeORM migration CreateVideos1790036402166 creating video_status_enum, videos table, and foreign key. Updated cleanAllTables to safely clean videos table when present.
 
 ### SI-03.3 — Storage Module & MinIO Integration
-- **Status:** pending
-- **Tests:** pending
-- **Observations:** none
+- **Status:** completed
+- **Tests:** 4 new integration tests passing in storage.service.integration-spec.ts (bucket auto-creation, presigned PUT URL, buffer upload with Range 206 stream reading, multipart upload round-trip); full test suite 151/151 unit/integration passing, 52/52 e2e passing, tsc code 0, lint 0 errors.
+- **Observations:** Implemented StorageService and StorageModule with @aws-sdk/client-s3 and @aws-sdk/s3-request-presigner. Configured automated bucket provisioning on module initialization for video and thumbnail buckets. Implemented getPresignedPutUrl, createMultipartUpload, getPresignedUploadPartUrl, completeMultipartUpload, uploadBuffer, and getObjectStream with HTTP Range header support. Added global testTimeout: 30000 in jest-e2e.json to account for Docker container spin-up latencies.
 
 ### SI-03.4 — Queue Module & BullMQ Setup
 - **Status:** pending

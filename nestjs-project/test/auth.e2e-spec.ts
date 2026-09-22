@@ -27,6 +27,8 @@ function body(res: { body: unknown }): HttpBody {
   return res.body as HttpBody;
 }
 
+jest.setTimeout(30000);
+
 describe('Auth (e2e)', () => {
   let app: INestApplication<App>;
   let dataSource: DataSource;
