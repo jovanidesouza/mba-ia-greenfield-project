@@ -33,7 +33,11 @@ docker compose exec nestjs-api npm run start:dev
 
 Services:
 - `nestjs-api` — NestJS API, port `3000`
+- `video-worker` — Standalone NestJS worker consuming BullMQ jobs, with FFmpeg/FFprobe
 - `db` — PostgreSQL 17, port `5432`, database `streamtube`, user/password `streamtube`
+- `redis` — Redis 7 Alpine, port `6379`, message queue broker for BullMQ
+- `minio` — MinIO Object Storage (S3-compatible), ports `9000` (API) and `9001` (Console)
+- `mailpit` — Mailpit SMTP server, ports `1025` (SMTP) and `8025` (Web UI)
 
 All verification and teardown commands run on the **host machine**:
 
@@ -146,8 +150,10 @@ Whenever possible, prefer storing only the bare address in `.env` and composing 
 
 NestJS with standard module structure. Source lives in `src/`, compiled output in `dist/`.
 
-- Each domain feature gets its own module (e.g., `UsersModule`, `VideosModule`) registered in `AppModule`
-- Controllers handle HTTP routing; Services hold business logic; both are scoped to their module
+- Each domain feature gets its own module (e.g., `UsersModule`, `AuthModule`, `ChannelsModule`, `VideosModule`, `StorageModule`, `QueueModule`) registered in `AppModule`.
+- Controllers handle HTTP routing; Services hold business logic; both are scoped to their module.
+- Background media processing is handled by `VideoProcessorWorker` via BullMQ (`video-processing` queue), executed in a standalone process (`src/worker.ts` / container `video-worker`).
+- Video files are uploaded directly to MinIO/S3 using presigned multipart URLs, ensuring zero API performance impact for up to 10GB files. Playback streaming supports HTTP Range (206 Partial Content).
 
 ## Code Conventions
 

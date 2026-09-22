@@ -1,7 +1,7 @@
 # phase-03-videos — Progress
 
-**Status:** in_progress  
-**SIs:** 7/8 completed
+**Status:** completed  
+**SIs:** 8/8 completed
 
 ### SI-03.1 — Dependencies, Configuration Namespaces & Docker Compose
 - **Status:** completed
@@ -39,6 +39,6 @@
 - **Observations:** Implemented GET /videos/:slug/stream supporting HTTP Range requests (status 206 Partial Content, Content-Range, Accept-Ranges: bytes) and full stream (status 200). Implemented GET /videos/:slug/download with Content-Disposition attachment. Enforced status validation preventing streaming or downloading non-READY videos (400 VIDEO_NOT_READY).
 
 ### SI-03.8 — OpenAPI/Swagger Documentation & Full Test Suite Pass
-- **Status:** pending
-- **Tests:** pending
-- **Observations:** none
+- **Status:** completed
+- **Tests:** 1 integration test passing in openapi-export.integration-spec.ts verifying OpenAPI spec integrity; full test suite 177/177 unit/integration passing (31 suites), 52/52 e2e passing, tsc code 0, lint 0 errors.
+- **Observations:** Annotated VideosController and DTOs with Swagger/OpenAPI decorators (@ApiTags, @ApiOperation, @ApiResponse, @ApiBearerAuth, @ApiParam, @ApiHeader). Exported and synced openapi.json. Updated root CLAUDE.md and nestjs-project/CLAUDE.md with VideosModule, storage, queue, and worker architecture. Sequential table drops in migrations.integration-spec.ts preventing foreign-key lock contention. Complete Definition of Done passing.
