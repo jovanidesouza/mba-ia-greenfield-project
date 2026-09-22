@@ -1,7 +1,7 @@
 # phase-03-videos — Progress
 
 **Status:** in_progress  
-**SIs:** 3/8 completed
+**SIs:** 4/8 completed
 
 ### SI-03.1 — Dependencies, Configuration Namespaces & Docker Compose
 - **Status:** completed
@@ -19,9 +19,9 @@
 - **Observations:** Implemented StorageService and StorageModule with @aws-sdk/client-s3 and @aws-sdk/s3-request-presigner. Configured automated bucket provisioning on module initialization for video and thumbnail buckets. Implemented getPresignedPutUrl, createMultipartUpload, getPresignedUploadPartUrl, completeMultipartUpload, uploadBuffer, and getObjectStream with HTTP Range header support. Added global testTimeout: 30000 in jest-e2e.json to account for Docker container spin-up latencies.
 
 ### SI-03.4 — Queue Module & BullMQ Setup
-- **Status:** pending
-- **Tests:** pending
-- **Observations:** none
+- **Status:** completed
+- **Tests:** 1 unit test passing in video-queue-producer.service.spec.ts (retry options & payload), 1 integration test passing in queue.integration-spec.ts against real Redis; full test suite 153/153 unit/integration passing (27 suites), 52/52 e2e passing, tsc code 0, lint 0 errors.
+- **Observations:** Installed @nestjs/bullmq@^11.0.5 matching NestJS 11 and CommonJS Jest environment. Created queue.constants.ts, ProcessVideoJobPayload interface, VideoQueueProducer service, and QueueModule with BullModule.forRootAsync and BullModule.registerQueue('video-processing'). Integrated QueueModule into AppModule. Verified job push and payload persistence in real Redis container.
 
 ### SI-03.5 — Videos Module (Endpoints de Upload & Gerenciamento de Rascunho)
 - **Status:** pending
