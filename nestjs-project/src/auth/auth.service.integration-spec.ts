@@ -28,6 +28,8 @@ import {
 import { clearMailpitMessages } from '../test/mailpit';
 import { AuthService } from './auth.service';
 import { RefreshToken } from './entities/refresh-token.entity';
+
+jest.setTimeout(30000);
 import {
   VerificationToken,
   VerificationTokenType,

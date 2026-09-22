@@ -24,6 +24,13 @@ export function createTestDataSource(
 }
 
 export async function cleanAllTables(dataSource: DataSource): Promise<void> {
+  const hasVideosTable: unknown = await dataSource.query(`
+    SELECT 1 FROM information_schema.tables 
+    WHERE table_schema = 'public' AND table_name = 'videos'
+  `);
+  if (Array.isArray(hasVideosTable) && hasVideosTable.length > 0) {
+    await dataSource.query('DELETE FROM "videos"');
+  }
   await dataSource.query('DELETE FROM "refresh_tokens"');
   await dataSource.query('DELETE FROM "verification_tokens"');
   await dataSource.query('DELETE FROM "channels"');
