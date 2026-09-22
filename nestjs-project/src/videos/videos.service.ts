@@ -9,6 +9,7 @@ import { VideoStatus } from './enums/video-status.enum';
 import { StorageService } from '../storage/storage.service';
 import { VideoQueueProducer } from '../queue/video-queue-producer.service';
 import { generateVideoSlug } from './utils/video-slug.util';
+import type { Readable } from 'stream';
 import type { InitUploadDto } from './dto/init-upload.dto';
 import type { CompleteUploadDto } from './dto/complete-upload.dto';
 import {
@@ -16,6 +17,7 @@ import {
   ForbiddenResourceException,
   InvalidUploadStateException,
   VideoNotFoundException,
+  VideoNotReadyException,
 } from '../common/exceptions/domain.exception';
 
 // 100MB threshold for multipart vs single-part upload
@@ -172,6 +174,59 @@ export class VideosService {
     }
 
     return video;
+  }
+
+  async getStream(
+    slug: string,
+    rangeHeader?: string,
+  ): Promise<{
+    stream: Readable;
+    contentLength?: number;
+    contentRange?: string;
+    contentType?: string;
+    acceptRanges?: string;
+  }> {
+    const video = await this.findBySlug(slug);
+
+    if (video.status !== VideoStatus.READY) {
+      throw new VideoNotReadyException();
+    }
+
+    const bucket = this.storageCfg.bucketVideos;
+    return this.storageService.getObjectStream(
+      bucket,
+      video.storage_key,
+      rangeHeader,
+    );
+  }
+
+  async getDownloadStream(slug: string): Promise<{
+    stream: Readable;
+    filename: string;
+    contentLength?: number;
+    contentType?: string;
+  }> {
+    const video = await this.findBySlug(slug);
+
+    if (video.status !== VideoStatus.READY) {
+      throw new VideoNotReadyException();
+    }
+
+    const bucket = this.storageCfg.bucketVideos;
+    const streamInfo = await this.storageService.getObjectStream(
+      bucket,
+      video.storage_key,
+    );
+
+    const ext = video.storage_key.split('.').pop() || 'mp4';
+    const filename = `${video.slug}.${ext}`;
+
+    return {
+      stream: streamInfo.stream,
+      filename,
+      contentLength: streamInfo.contentLength,
+      contentType: streamInfo.contentType || 'video/mp4',
+    };
   }
 
   private async generateUniqueSlug(maxRetries = 5): Promise<string> {

@@ -2,11 +2,14 @@ import {
   Body,
   Controller,
   Get,
+  Headers,
   HttpCode,
   HttpStatus,
   Param,
   Post,
+  Res,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import { VideosService } from './videos.service';
 import { InitUploadDto } from './dto/init-upload.dto';
 import { CompleteUploadDto } from './dto/complete-upload.dto';
@@ -35,6 +38,56 @@ export class VideosController {
     @Body() dto: CompleteUploadDto,
   ) {
     return this.videosService.completeUpload(id, user.sub, dto);
+  }
+
+  @Get(':slug/stream')
+  @Public()
+  async getStream(
+    @Param('slug') slug: string,
+    @Headers('range') range: string | undefined,
+    @Res() res: Response,
+  ): Promise<void> {
+    const streamInfo = await this.videosService.getStream(slug, range);
+
+    res.setHeader('Accept-Ranges', streamInfo.acceptRanges || 'bytes');
+    if (streamInfo.contentType) {
+      res.setHeader('Content-Type', streamInfo.contentType);
+    }
+    if (streamInfo.contentLength !== undefined) {
+      res.setHeader('Content-Length', streamInfo.contentLength);
+    }
+
+    if (range && streamInfo.contentRange) {
+      res.status(HttpStatus.PARTIAL_CONTENT);
+      res.setHeader('Content-Range', streamInfo.contentRange);
+    } else {
+      res.status(HttpStatus.OK);
+    }
+
+    streamInfo.stream.pipe(res);
+  }
+
+  @Get(':slug/download')
+  @Public()
+  async getDownload(
+    @Param('slug') slug: string,
+    @Res() res: Response,
+  ): Promise<void> {
+    const downloadInfo = await this.videosService.getDownloadStream(slug);
+
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="${downloadInfo.filename}"`,
+    );
+    if (downloadInfo.contentType) {
+      res.setHeader('Content-Type', downloadInfo.contentType);
+    }
+    if (downloadInfo.contentLength !== undefined) {
+      res.setHeader('Content-Length', downloadInfo.contentLength);
+    }
+
+    res.status(HttpStatus.OK);
+    downloadInfo.stream.pipe(res);
   }
 
   @Get(':slug')

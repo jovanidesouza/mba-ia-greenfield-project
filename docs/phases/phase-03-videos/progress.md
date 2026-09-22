@@ -1,7 +1,7 @@
 # phase-03-videos — Progress
 
 **Status:** in_progress  
-**SIs:** 6/8 completed
+**SIs:** 7/8 completed
 
 ### SI-03.1 — Dependencies, Configuration Namespaces & Docker Compose
 - **Status:** completed
@@ -34,14 +34,9 @@
 - **Observations:** Implemented VideoProcessorWorker extending WorkerHost with fluent-ffmpeg for duration probe and frame screenshot. Created WorkerModule and standalone worker entrypoint src/worker.ts. Added video-worker service to compose.yaml running npm run start:worker:dev in an isolated container.
 
 ### SI-03.7 — Video Streaming (Range 206) & File Download
-- **Status:** pending
-- **Tests:** pending
-- **Observations:** none
-
-### SI-03.7 — Video Streaming (Range 206) & File Download
-- **Status:** pending
-- **Tests:** pending
-- **Observations:** none
+- **Status:** completed
+- **Tests:** 4 new unit tests in videos.service.spec.ts, 5 new integration tests in videos.streaming.integration-spec.ts against real MinIO and Postgres; full test suite 177/177 unit/integration passing (31 suites), 52/52 e2e passing, tsc code 0, lint 0 errors.
+- **Observations:** Implemented GET /videos/:slug/stream supporting HTTP Range requests (status 206 Partial Content, Content-Range, Accept-Ranges: bytes) and full stream (status 200). Implemented GET /videos/:slug/download with Content-Disposition attachment. Enforced status validation preventing streaming or downloading non-READY videos (400 VIDEO_NOT_READY).
 
 ### SI-03.8 — OpenAPI/Swagger Documentation & Full Test Suite Pass
 - **Status:** pending

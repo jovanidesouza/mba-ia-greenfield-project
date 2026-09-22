@@ -1,3 +1,4 @@
+import type { Readable } from 'stream';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import type { Repository } from 'typeorm';
@@ -13,6 +14,7 @@ import {
   ForbiddenResourceException,
   InvalidUploadStateException,
   VideoNotFoundException,
+  VideoNotReadyException,
 } from '../common/exceptions/domain.exception';
 
 describe('VideosService (unit)', () => {
@@ -50,6 +52,11 @@ describe('VideosService (unit)', () => {
         .fn()
         .mockResolvedValue('http://minio/part-url'),
       completeMultipartUpload: jest.fn().mockResolvedValue(undefined),
+      getObjectStream: jest.fn().mockResolvedValue({
+        stream: {} as unknown as Readable,
+        contentLength: 100,
+        contentType: 'video/mp4',
+      }),
     } as unknown as jest.Mocked<StorageService>;
 
     videoQueueProducer = {
@@ -216,6 +223,74 @@ describe('VideosService (unit)', () => {
 
       const found = await service.findBySlug('valid-slug');
       expect(found).toBe(video);
+    });
+  });
+
+  describe('getStream', () => {
+    it('throws VideoNotReadyException when video status is not READY', async () => {
+      const video = {
+        id: 'v1',
+        slug: 's1',
+        status: VideoStatus.PROCESSING,
+      } as Video;
+      videoRepository.findOne.mockResolvedValue(video);
+
+      await expect(service.getStream('s1')).rejects.toThrow(
+        VideoNotReadyException,
+      );
+    });
+
+    it('returns stream info from storage service when video is READY', async () => {
+      const video = {
+        id: 'v1',
+        slug: 's1',
+        status: VideoStatus.READY,
+        storage_key: 'videos/c1/s1/v.mp4',
+      } as Video;
+      videoRepository.findOne.mockResolvedValue(video);
+
+      const streamInfo = await service.getStream('s1', 'bytes=0-100');
+
+      expect(storageService.getObjectStream).toHaveBeenCalledWith(
+        'streamtube-videos',
+        'videos/c1/s1/v.mp4',
+        'bytes=0-100',
+      );
+      expect(streamInfo.contentLength).toBe(100);
+    });
+  });
+
+  describe('getDownloadStream', () => {
+    it('throws VideoNotReadyException when video status is not READY', async () => {
+      const video = {
+        id: 'v1',
+        slug: 's1',
+        status: VideoStatus.DRAFT,
+      } as Video;
+      videoRepository.findOne.mockResolvedValue(video);
+
+      await expect(service.getDownloadStream('s1')).rejects.toThrow(
+        VideoNotReadyException,
+      );
+    });
+
+    it('returns stream and attachment filename when video is READY', async () => {
+      const video = {
+        id: 'v1',
+        slug: 's1',
+        status: VideoStatus.READY,
+        storage_key: 'videos/c1/s1/video.mp4',
+      } as Video;
+      videoRepository.findOne.mockResolvedValue(video);
+
+      const downloadInfo = await service.getDownloadStream('s1');
+
+      expect(storageService.getObjectStream).toHaveBeenCalledWith(
+        'streamtube-videos',
+        'videos/c1/s1/video.mp4',
+      );
+      expect(downloadInfo.filename).toBe('s1.mp4');
+      expect(downloadInfo.contentLength).toBe(100);
     });
   });
 });
