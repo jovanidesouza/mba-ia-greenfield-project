@@ -1,2 +1,4 @@
 .history/
 settings.local.json
+.agent-scratch/
+**/.agent-scratch/
