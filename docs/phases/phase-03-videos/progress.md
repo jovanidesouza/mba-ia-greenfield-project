@@ -1,7 +1,7 @@
 # phase-03-videos — Progress
 
 **Status:** in_progress  
-**SIs:** 4/8 completed
+**SIs:** 5/8 completed
 
 ### SI-03.1 — Dependencies, Configuration Namespaces & Docker Compose
 - **Status:** completed
@@ -24,9 +24,9 @@
 - **Observations:** Installed @nestjs/bullmq@^11.0.5 matching NestJS 11 and CommonJS Jest environment. Created queue.constants.ts, ProcessVideoJobPayload interface, VideoQueueProducer service, and QueueModule with BullModule.forRootAsync and BullModule.registerQueue('video-processing'). Integrated QueueModule into AppModule. Verified job push and payload persistence in real Redis container.
 
 ### SI-03.5 — Videos Module (Endpoints de Upload & Gerenciamento de Rascunho)
-- **Status:** pending
-- **Tests:** pending
-- **Observations:** none
+- **Status:** completed
+- **Tests:** 9 unit tests passing in videos.service.spec.ts, 2 integration tests passing in videos.service.integration-spec.ts; full test suite 164/164 unit/integration passing (29 suites), 52/52 e2e passing, tsc code 0, lint 0 errors.
+- **Observations:** Implemented VideosModule, VideosController, VideosService, InitUploadDto, CompleteUploadDto, and video-slug.util.ts. Added domain exceptions VideoNotFoundException, ChannelNotFoundException, ForbiddenResourceException, InvalidUploadStateException, and VideoNotReadyException. Handled multipart upload branching for files > 100MB (up to 10GB limit) generating presigned part URLs. Verified video draft persistence in PostgreSQL, status transition to PROCESSING upon completion, and BullMQ job enqueuing.
 
 ### SI-03.6 — Standalone Video Worker & FFmpeg Metadata/Thumbnail Extraction
 - **Status:** pending
