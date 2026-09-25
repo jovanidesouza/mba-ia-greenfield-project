@@ -8,6 +8,7 @@ import storageConfig from '../config/storage.config';
 import { envValidationSchema } from '../config/env.validation';
 import { Video } from '../videos/entities/video.entity';
 import { Channel } from '../channels/entities/channel.entity';
+import { User } from '../users/entities/user.entity';
 import { StorageModule } from '../storage/storage.module';
 import { QueueModule } from '../queue/queue.module';
 import { VideoProcessorWorker } from './video-processor.worker';
@@ -34,7 +35,7 @@ import { VideoProcessorWorker } from './video-processor.worker';
         synchronize: false,
       }),
     }),
-    TypeOrmModule.forFeature([Video, Channel]),
+    TypeOrmModule.forFeature([Video, Channel, User]),
     StorageModule,
     QueueModule,
   ],

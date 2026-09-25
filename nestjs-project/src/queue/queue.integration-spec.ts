@@ -49,7 +49,13 @@ describe('QueueModule (integration)', () => {
 
     await producer.addVideoProcessingJob(payload);
 
-    const jobs = await queue.getJobs(['waiting', 'delayed']);
+    const jobs = await queue.getJobs([
+      'waiting',
+      'delayed',
+      'active',
+      'completed',
+      'failed',
+    ]);
     const found = jobs.find((j) => j.data.videoId === payload.videoId);
 
     expect(found).toBeDefined();
