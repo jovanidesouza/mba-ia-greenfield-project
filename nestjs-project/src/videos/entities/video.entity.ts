@@ -37,6 +37,9 @@ export class Video {
   storage_key: string;
 
   @Column({ type: 'varchar', length: 500, nullable: true })
+  upload_id: string | null;
+
+  @Column({ type: 'varchar', length: 500, nullable: true })
   thumbnail_url: string | null;
 
   @Column({ type: 'integer', nullable: true })

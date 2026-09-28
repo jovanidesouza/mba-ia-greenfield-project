@@ -93,6 +93,9 @@ export class VideosService {
         dto.content_type,
       );
 
+      savedVideo.upload_id = uploadId;
+      await this.videoRepository.save(savedVideo);
+
       const partCount = Math.ceil(dto.file_size / DEFAULT_PART_SIZE);
       const partsUrls: { part_number: number; url: string }[] = [];
 
@@ -142,10 +145,25 @@ export class VideosService {
       throw new InvalidUploadStateException();
     }
 
-    // Complete multipart upload if parts were provided
-    if (dto.parts && dto.parts.length > 0) {
-      // Find uploadId or finalize through storageService
-      // Note: for multipart, the client submits parts with ETag and PartNumber
+    // Multipart uploads (upload_id set in initUpload) must be finalized against
+    // the real storage backend before the video is considered uploaded — this is
+    // what validates the client-submitted parts/ETags actually exist in S3/MinIO.
+    if (video.upload_id) {
+      if (!dto.parts || dto.parts.length === 0) {
+        throw new InvalidUploadStateException(
+          'Parts are required to complete a multipart upload',
+        );
+      }
+
+      await this.storageService.completeMultipartUpload(
+        this.storageCfg.bucketVideos,
+        video.storage_key,
+        video.upload_id,
+        dto.parts.map((part) => ({
+          PartNumber: part.PartNumber,
+          ETag: part.ETag,
+        })),
+      );
     }
 
     video.status = VideoStatus.PROCESSING;
