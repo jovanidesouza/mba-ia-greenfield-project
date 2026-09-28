@@ -7,6 +7,7 @@ import { Video } from '../videos/entities/video.entity';
 import { CreateUsersAndChannels1775687773260 } from './migrations/1775687773260-CreateUsersAndChannels';
 import { CreateAuthTokens1777579850478 } from './migrations/1777579850478-CreateAuthTokens';
 import { CreateVideos1790036402166 } from './migrations/1790036402166-CreateVideos';
+import { AddUploadIdToVideos1790630240384 } from './migrations/1790630240384-AddUploadIdToVideos';
 import { createTestDataSource } from '../test/create-test-data-source';
 
 const MANAGED_TABLES = [
@@ -29,6 +30,7 @@ describe('Database migrations (integration)', () => {
           CreateUsersAndChannels1775687773260,
           CreateAuthTokens1777579850478,
           CreateVideos1790036402166,
+          AddUploadIdToVideos1790630240384,
         ],
       },
     );
@@ -59,7 +61,7 @@ describe('Database migrations (integration)', () => {
   it('should apply all migrations and create all five tables', async () => {
     const ranMigrations = await dataSource.runMigrations();
 
-    expect(ranMigrations).toHaveLength(3);
+    expect(ranMigrations).toHaveLength(4);
 
     const result = await dataSource.query<{ table_name: string }[]>(
       `SELECT table_name FROM information_schema.tables
@@ -76,10 +78,22 @@ describe('Database migrations (integration)', () => {
       'verification_tokens',
       'videos',
     ]);
+
+    const columns = await dataSource.query<{ column_name: string }[]>(
+      `SELECT column_name FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'videos' AND column_name = 'upload_id'`,
+    );
+    expect(columns).toHaveLength(1);
   });
 
-  it('should revert the last migration and remove videos table', async () => {
+  it('should revert the last migration and remove the upload_id column', async () => {
     await dataSource.undoLastMigration();
+
+    const columns = await dataSource.query<{ column_name: string }[]>(
+      `SELECT column_name FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'videos' AND column_name = 'upload_id'`,
+    );
+    expect(columns).toHaveLength(0);
 
     const result = await dataSource.query<{ table_name: string }[]>(
       `SELECT table_name FROM information_schema.tables
@@ -87,6 +101,6 @@ describe('Database migrations (integration)', () => {
          AND table_name = ANY($1::text[])`,
       [['videos']],
     );
-    expect(result).toHaveLength(0);
+    expect(result).toHaveLength(1);
   });
 });

@@ -152,6 +152,9 @@ describe('VideosService (unit)', () => {
       expect(res.upload_id).toBe('upload-id-123');
       expect(res.parts_urls?.length).toBe(25);
       expect(storageService.createMultipartUpload).toHaveBeenCalled();
+      expect(videoRepository.save).toHaveBeenLastCalledWith(
+        expect.objectContaining({ upload_id: 'upload-id-123' }),
+      );
     });
   });
 
@@ -200,11 +203,61 @@ describe('VideosService (unit)', () => {
       const res = await service.completeUpload('video-1', 'user-1', {});
 
       expect(res.video.status).toBe(VideoStatus.PROCESSING);
+      expect(storageService.completeMultipartUpload).not.toHaveBeenCalled();
       expect(videoQueueProducer.addVideoProcessingJob).toHaveBeenCalledWith({
         videoId: 'video-1',
         storageKey: 'videos/c1/slug/v.mp4',
         channelId: 'c1',
       });
+    });
+
+    it('throws InvalidUploadStateException when a multipart video is completed without parts', async () => {
+      const video = {
+        id: 'video-1',
+        status: VideoStatus.DRAFT,
+        storage_key: 'videos/c1/slug/v.mp4',
+        channel_id: 'c1',
+        upload_id: 'upload-id-123',
+        channel: { user_id: 'user-1' },
+      } as Video;
+      videoRepository.findOne.mockResolvedValue(video);
+
+      await expect(
+        service.completeUpload('video-1', 'user-1', {}),
+      ).rejects.toThrow(InvalidUploadStateException);
+      expect(storageService.completeMultipartUpload).not.toHaveBeenCalled();
+      expect(videoQueueProducer.addVideoProcessingJob).not.toHaveBeenCalled();
+    });
+
+    it('finalizes the multipart upload in storage before queuing processing', async () => {
+      const video = {
+        id: 'video-1',
+        status: VideoStatus.DRAFT,
+        storage_key: 'videos/c1/slug/v.mp4',
+        channel_id: 'c1',
+        upload_id: 'upload-id-123',
+        channel: { user_id: 'user-1' },
+      } as Video;
+      videoRepository.findOne.mockResolvedValue(video);
+
+      const res = await service.completeUpload('video-1', 'user-1', {
+        parts: [
+          { PartNumber: 1, ETag: '"etag-1"' },
+          { PartNumber: 2, ETag: '"etag-2"' },
+        ],
+      });
+
+      expect(storageService.completeMultipartUpload).toHaveBeenCalledWith(
+        'streamtube-videos',
+        'videos/c1/slug/v.mp4',
+        'upload-id-123',
+        [
+          { PartNumber: 1, ETag: '"etag-1"' },
+          { PartNumber: 2, ETag: '"etag-2"' },
+        ],
+      );
+      expect(res.video.status).toBe(VideoStatus.PROCESSING);
+      expect(videoQueueProducer.addVideoProcessingJob).toHaveBeenCalled();
     });
   });
 
